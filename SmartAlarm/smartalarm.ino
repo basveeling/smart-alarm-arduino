@@ -48,8 +48,8 @@ int accx,accy,accz;
 void setup()
 {
  DDRD = DDRD | B11111100; //all pins 2-7 outputs
- pinMode(d8, OUTPUT);
- pinMode(d9, OUTPUT);
+ pinMode(8, OUTPUT);
+ pinMode(9, OUTPUT);
  PORTD=0x00; // make pins 0-7 LOWs
  PORTB=0x00; // make pins 8-13 LOWs
  pinMode(d2, OUTPUT);
@@ -192,19 +192,19 @@ void loop()
 
   //The ADXL345 gives 10-bit acceleration values, but they are stored as bytes (8-bits). To get the full value, two bytes must be combined for each axis.
   //The X value is stored in values[0] and values[1].
-  x = ((int)values[1]<<8)|(int)values[0];
+  accx = ((int)values[1]<<8)|(int)values[0];
   //The Y value is stored in values[2] and values[3].
-  y = ((int)values[3]<<8)|(int)values[2];
+  accy = ((int)values[3]<<8)|(int)values[2];
   //The Z value is stored in values[4] and values[5].
-  z = ((int)values[5]<<8)|(int)values[4];
+  accz = ((int)values[5]<<8)|(int)values[4];
   
   //Print the results to the terminal.
-  Serial.print(x, DEC);
+  Serial.print(accx, DEC);
   Serial.print(',');
-  Serial.print(y, DEC);
+  Serial.print(accy, DEC);
   Serial.print(',');
-  Serial.println(z, DEC);      
-  delay(10); 
+  Serial.println(accz, DEC);      
+  delay(10);
 }
 
 void alarmSound() {
