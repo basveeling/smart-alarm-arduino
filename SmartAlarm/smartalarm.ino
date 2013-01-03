@@ -11,12 +11,14 @@
 const int BTN_MENU = A3;
 const int BTN_HR = A4;
 const int BTN_MIN = A5;
-const int SPEAKER = 13;
+
 int lastButtonMenu = LOW;  // the previous reading from the input pin
 int lastButtonHour = LOW;  // the previous reading from the input pin
 int lastButtonMinute = LOW;  // the previous reading from the input pin
 const int d1=9,d2=A2,d3=A1,d4=A0;
 
+int blocklength = 30; // measure movement for 30 minutes.
+int inMeasureBlock = false; 
 
 int state = 0;
 int hours = 0;
@@ -40,7 +42,8 @@ char DATAZ1 = 0x37;	//Z-Axis Data 1
 char values[10];
 //These variables will be used to hold the x,y and z axis accelerometer values.
 int accx,accy,accz;
-
+int lastx,lasty,lastz;
+int change;
 
 /*
  * SETUP method
@@ -66,7 +69,7 @@ void setup()
  digitalWrite(CS, HIGH);
   
  //Put the ADXL345 into +/- 4G range by writing the value 0x01 to the DATA_FORMAT register.
- writeRegister(DATA_FORMAT, 0x01);
+ writeRegister(DATA_FORMAT, 0x00);
  //Put the ADXL345 into Measurement Mode by writing 0x08 to the POWER_CTL register.
  writeRegister(POWER_CTL, 0x08);  //Measurement mode  
 }
@@ -106,7 +109,8 @@ void incTimeMinutes() {
 }
 
 void setAlarm() {
-  Alarm.alarmRepeat(0,hours,mins,alarmSound); //TODO: reset to hours and mins, instead of minutes and seconds
+  Alarm.alarmRepeat(0,hours,mins,blockStart); //TODO: reset to hours and mins, instead of minutes and seconds
+  Alarm.alarmRepeat(0,hours +((mins+blocklength)/60),(mins+blocklength) % 60,alarmSound); //TODO: reset to hours and mins, instead of minutes and seconds
   Serial.print("Alarm set on: "); 
   Serial.print(hours); 
   Serial.print(":");
@@ -150,8 +154,7 @@ void onLongPressed(int btnPin, void (*onLongPressed)()) {
 /*
  * LOOP method
  */
-void loop()
-{
+void loop() {
   int currentTime = millis();
   int delta_time = 0;
   Alarm.delay(0);
@@ -184,40 +187,57 @@ void loop()
       displayTime(99,99); //error!
       break;
   }
-  
-  //ACCELEROMETER stuff
-  //Reading 6 bytes of data starting at register DATAX0 will retrieve the x,y and z acceleration values from the ADXL345.
-  //The results of the read operation will get stored to the values[] buffer.
-  readRegister(DATAX0, 6, values);
+  if(inMeasureBlock) {
+    //ACCELEROMETER stuff
+    //Reading 6 bytes of data starting at register DATAX0 will retrieve the x,y and z acceleration values from the ADXL345.
+    //The results of the read operation will get stored to the values[] buffer.
+    readRegister(DATAX0, 6, values);
 
-  //The ADXL345 gives 10-bit acceleration values, but they are stored as bytes (8-bits). To get the full value, two bytes must be combined for each axis.
-  //The X value is stored in values[0] and values[1].
-  accx = ((int)values[1]<<8)|(int)values[0];
-  //The Y value is stored in values[2] and values[3].
-  accy = ((int)values[3]<<8)|(int)values[2];
-  //The Z value is stored in values[4] and values[5].
-  accz = ((int)values[5]<<8)|(int)values[4];
-  
-  //Print the results to the terminal.
-  Serial.print(accx, DEC);
-  Serial.print(',');
-  Serial.print(accy, DEC);
-  Serial.print(',');
-  Serial.println(accz, DEC);      
-  delay(10);
+    //The ADXL345 gives 10-bit acceleration values, but they are stored as bytes (8-bits). To get the full value, two bytes must be combined for each axis.
+    //The X value is stored in values[0] and values[1].
+    accx = ((int)values[1]<<8)|(int)values[0];
+    //The Y value is stored in values[2] and values[3].
+    accy = ((int)values[3]<<8)|(int)values[2];
+    //The Z value is stored in values[4] and values[5].
+    accz = ((int)values[5]<<8)|(int)values[4];
+    
+    change = abs(lastx-accx) + abs(lasty-accy) + abs(lastz-accz);
+    lastx = accx;
+    lasty = accy;
+    lastz = accz;
+
+    //Print the results to the terminal.
+    // Serial.print(accx, DEC);
+    // Serial.print(',');
+    // Serial.print(accy, DEC);
+    // Serial.print(',');
+    // Serial.println(accz, DEC);
+    Serial.println(change);
+
+    if(change > 100) {
+      alarmSound();
+    }
+  }
+}
+
+void blockStart() {
+  Serial.println("Engaging Block"); 
+  inMeasureBlock = true;
 }
 
 void alarmSound() {
+  inMeasureBlock = false;
   Serial.println("Alarm triggered!"); 
-  tone(SPEAKER, 440, 500);
-  Alarm.delay(100);
-  noTone(SPEAKER);
-  tone(SPEAKER, 523, 500);
-  Alarm.delay(100);
-  noTone(SPEAKER);
-  tone(SPEAKER, 659, 500);
-  Alarm.delay(100);
-  noTone(SPEAKER);
+  // tone(SPEAKER, 440, 500);
+  // Alarm.delay(100);
+  // noTone(SPEAKER);
+  // tone(SPEAKER, 523, 500);
+  // Alarm.delay(100);
+  // noTone(SPEAKER);
+  // tone(SPEAKER, 659, 500);
+  // Alarm.delay(100);
+  // noTone(SPEAKER);
+
 }
 
 void displayTime(int hours, int minutes) {
@@ -232,8 +252,8 @@ void displayDigitOnSquare(int num, int square) {
     displayDigit(num);
     Alarm.delay(0);
 }
-void displayDigit(int num)
-{
+
+void displayDigit(int num) {
    switch(num)
    {
      case 0:
@@ -279,8 +299,7 @@ void displayDigit(int num)
    }
 }
 
-void turnOnSquare(int num)
-{
+void turnOnSquare(int num) {
  switch(num)
  {
    case 1:
