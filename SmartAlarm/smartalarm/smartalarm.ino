@@ -11,6 +11,7 @@
 const int BTN_MENU = A3;
 const int BTN_HR = A4;
 const int BTN_MIN = A5;
+const int SPEAKER = 3;
 
 int lastButtonMenu = LOW;  // the previous reading from the input pin
 int lastButtonHour = LOW;  // the previous reading from the input pin
@@ -68,7 +69,7 @@ void setup()
  pinMode(CS, OUTPUT);
  digitalWrite(CS, HIGH);
   
- //Put the ADXL345 into +/- 4G range by writing the value 0x01 to the DATA_FORMAT register.
+ //Put the ADXL345 into +/- 2G range by writing the value 0x01 to the DATA_FORMAT register.
  writeRegister(DATA_FORMAT, 0x00);
  //Put the ADXL345 into Measurement Mode by writing 0x08 to the POWER_CTL register.
  writeRegister(POWER_CTL, 0x08);  //Measurement mode  
@@ -206,12 +207,12 @@ void loop() {
     lasty = accy;
     lastz = accz;
 
-    //Print the results to the terminal.
-    // Serial.print(accx, DEC);
-    // Serial.print(',');
-    // Serial.print(accy, DEC);
-    // Serial.print(',');
-    // Serial.println(accz, DEC);
+    // Print the results to the terminal.
+    Serial.print(accx, DEC);
+    Serial.print(',');
+    Serial.print(accy, DEC);
+    Serial.print(',');
+    Serial.println(accz, DEC);
     Serial.println(change);
 
     if(change > 100) {
@@ -228,15 +229,15 @@ void blockStart() {
 void alarmSound() {
   inMeasureBlock = false;
   Serial.println("Alarm triggered!"); 
-  // tone(SPEAKER, 440, 500);
-  // Alarm.delay(100);
-  // noTone(SPEAKER);
-  // tone(SPEAKER, 523, 500);
-  // Alarm.delay(100);
-  // noTone(SPEAKER);
-  // tone(SPEAKER, 659, 500);
-  // Alarm.delay(100);
-  // noTone(SPEAKER);
+  tone(SPEAKER, 440, 500);
+  Alarm.delay(100);
+  noTone(SPEAKER);
+  tone(SPEAKER, 523, 500);
+  Alarm.delay(100);
+  noTone(SPEAKER);
+  tone(SPEAKER, 659, 500);
+  Alarm.delay(100);
+  noTone(SPEAKER);
 
 }
 
@@ -257,44 +258,73 @@ void displayDigit(int num) {
    switch(num)
    {
      case 0:
-      PORTD=B00000011; // pins 2-7 on
-      digitalWrite(8,HIGH); // turn off pin 8
+      digitalWrite(8,LOW); // turn off pin 8
+      digitalWrite(7,LOW); // turn off pin 7
+      digitalWrite(6,LOW); // turn off pin 6
+      digitalWrite(5,LOW); // turn off pin 5
      break;
      case 1:
-      PORTD=B11100111; // only pins 2 and 3 are on
-      digitalWrite(8,HIGH); // turn off pin 8
+      //PORTD=B11100111; // only pins 2 and 3 are on
+      digitalWrite(8,LOW); // turn off pin 8
+      digitalWrite(7,LOW); // turn off pin 7
+      digitalWrite(6,LOW); // turn off pin 6
+      digitalWrite(5,HIGH); // turn ON pin 5
      break;
      case 2:
-      PORTD=B10010011; // only pins 2,3,5 and 6 on
-      digitalWrite(8,LOW); // segment g on
+      //PORTD=B10010011; // only pins 2,3,5 and 6 on
+      digitalWrite(8,LOW); // turn off pin 8
+      digitalWrite(7,LOW); // turn off pin 7
+      digitalWrite(6,HIGH); // turn ON pin 6
+      digitalWrite(5,LOW); // turn off pin 5
      break;
      case 3:
-      PORTD=B11000011; // only pins 2,3,4 and 5 on
-      digitalWrite(8,LOW); // segment g on
+      //PORTD=B11000011; // only pins 2,3,4 and 5 on
+      digitalWrite(8,LOW); // turn off pin 8
+      digitalWrite(7,LOW); // turn off pin 7
+      digitalWrite(6,HIGH); // turn ON pin 6
+      digitalWrite(5,HIGH); // turn ON pin 5
      break;
      case 4:
-      PORTD=B01100111; // only pins 3,4 and 7 on
-      digitalWrite(8,LOW); // segment g on
+      //PORTD=B01100111; // only pins 3,4 and 7 on
+      digitalWrite(8,LOW); // turn off pin 8
+      digitalWrite(7,HIGH); // turn ON pin 7
+      digitalWrite(6,LOW); // turn off pin 6
+      digitalWrite(5,LOW); // turn off pin 5
      break;
      case 5:
-      PORTD=B01001011; //B10110100; // only pins 2,4,5 and 7 on
-      digitalWrite(8,LOW); // segment g on
+      //PORTD=B01001011; //B10110100; // only pins 2,4,5 and 7 on
+      digitalWrite(8,LOW); // turn off pin 8
+      digitalWrite(7,HIGH); // turn ON pin 7
+      digitalWrite(6,LOW); // turn off pin 6
+      digitalWrite(5,HIGH); // turn ON pin 5
      break;
      case 6:
-      PORTD=B00001011; //B11110100; // only pins 2,4,5,6 and 7 on
-      digitalWrite(8,LOW); // segment g on
+      //PORTD=B00001011; //B11110100; // only pins 2,4,5,6 and 7 on
+      digitalWrite(8,LOW); // turn off pin 8
+      digitalWrite(7,HIGH); // turn ON pin 7
+      digitalWrite(6,HIGH); // turn ON pin 6
+      digitalWrite(5,LOW); // turn off pin 5
      break;
      case 7:
-      PORTD=B11100011; // only pins 2,3 and 4 on
-      digitalWrite(8,HIGH); // segment g off
+      //PORTD=B11100011; // only pins 2,3 and 4 on
+      digitalWrite(8,LOW); // turn off pin 8
+      digitalWrite(7,HIGH); // turn ON pin 7
+      digitalWrite(6,HIGH); // turn ON pin 6
+      digitalWrite(5,HIGH); // turn ON pin 5
      break;
      case 8:
-      PORTD=B00000011; // pins 2-7 on
-      digitalWrite(8,LOW); // turn on pin 8
+      //PORTD=B00000011; // pins 2-7 on
+      digitalWrite(8,HIGH); // turn ON pin 8
+      digitalWrite(7,LOW); // turn off pin 7
+      digitalWrite(6,LOW); // turn off pin 6
+      digitalWrite(5,LOW); // turn off pin 5
      break;
      case 9:
-      PORTD=B01000011; // only pins 2,3, 4 and 5 on
-      digitalWrite(8,LOW); // segment g on
+      //PORTD=B01000011; // only pins 2,3, 4 and 5 on
+      digitalWrite(8,HIGH); // turn ON pin 8
+      digitalWrite(7,LOW); // turn off pin 7
+      digitalWrite(6,LOW); // turn off pin 6
+      digitalWrite(5,HIGH); // turn ON pin 5
      break;
    }
 }
