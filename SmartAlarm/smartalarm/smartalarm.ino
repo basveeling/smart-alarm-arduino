@@ -59,6 +59,7 @@ void setup()
  pinMode(d2, OUTPUT);
  pinMode(d3, OUTPUT);
  pinMode(d4, OUTPUT);
+ pinMode(SPEAKER, OUTPUT);
  setTime(0,0,0,0,0,0);
  
  SPI.begin();
