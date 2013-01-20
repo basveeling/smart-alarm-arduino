@@ -17,9 +17,9 @@ const int BTN_MIN_PIN = A5;
 const int SPEAKER_PIN = 3;
 const int ALARM_LED_PIN = 4;
 // Digit select pins
-const int DIGIT_1=9,DIGIT_2=A2,DIGIT_3=A1,DIGIT_4=A0;
+const int DIGIT_1 = 9, DIGIT_2 = A2, DIGIT_3 = A1, DIGIT_4 = A0;
 // Chip select for SPI protocol
-const int CHIP_SELECT_PIN=10;
+const int CHIP_SELECT_PIN = 10;
 
 // Last readings for buttons
 int last_button_menu = LOW;  // the previous reading from the input pin
@@ -39,20 +39,20 @@ int blink_delay = 0;
 int state = 0;
 
 //Accelerometer registers, values and and pins
-char POWER_CTL = 0x2D;	//Power Control Register
+char POWER_CTL = 0x2D;  //Power Control Register
 char DATA_FORMAT = 0x31;
-char DATAX0 = 0x32;	//X-Axis Data 0
-char DATAX1 = 0x33;	//X-Axis Data 1
-char DATAY0 = 0x34;	//Y-Axis Data 0
-char DATAY1 = 0x35;	//Y-Axis Data 1
-char DATAZ0 = 0x36;	//Z-Axis Data 0
-char DATAZ1 = 0x37;	//Z-Axis Data 1
+char DATAX0 = 0x32; //X-Axis Data 0
+char DATAX1 = 0x33; //X-Axis Data 1
+char DATAY0 = 0x34; //Y-Axis Data 0
+char DATAY1 = 0x35; //Y-Axis Data 1
+char DATAZ0 = 0x36; //Z-Axis Data 0
+char DATAZ1 = 0x37; //Z-Axis Data 1
 
 //This buffer will hold values read from the ADXL345 registers.
 char values[10];
 //These variables will be used to hold the x,y and z axis accelerometer values.
-int acc_x,acc_y,acc_z;
-int last_x,last_y,last_z;
+int acc_x, acc_y, acc_z;
+int last_x, last_y, last_z;
 int acc_change;
 
 /*
@@ -62,15 +62,15 @@ void setup() {
     DDRD = DDRD | B11111100; //all pins 2-7 outputs
     pinMode(8, OUTPUT);
     pinMode(9, OUTPUT);
-    PORTD=0x00; // make pins 0-7 LOWs
-    PORTB=0x00; // make pins 8-13 LOWs
+    PORTD = 0x00; // make pins 0-7 LOWs
+    PORTB = 0x00; // make pins 8-13 LOWs
     pinMode(DIGIT_2, OUTPUT);
     pinMode(DIGIT_3, OUTPUT);
     pinMode(DIGIT_4, OUTPUT);
     pinMode(SPEAKER_PIN, OUTPUT);
     pinMode(ALARM_LED_PIN, OUTPUT);
     digitalWrite(ALARM_LED_PIN, LOW);
-    setTime(0,0,0,0,0,0);
+    setTime(0, 0, 0, 0, 0, 0);
 
     SPI.begin();
     SPI.setDataMode(SPI_MODE3);
@@ -88,11 +88,11 @@ void setup() {
 
 void toggleState() {
     state = (state + 1) % 3;
-    if(state == 0) { // state switched to 0, set the alarm
+    if (state == 0) { // state switched to 0, set the alarm
         setAlarm();
-    } else if(state == 1) {
+    } else if (state == 1) {
         blink_delay = millis();
-    } else if(state == 2) {
+    } else if (state == 2) {
         setTime(0, minute() + inc_hours_amount, second() + inc_mins_amount, day(), month(), year());
         inc_hours_amount = 0;
         inc_mins_amount = 0;
@@ -121,16 +121,15 @@ void incTimeMinutes() {
 }
 
 void setAlarm() {
-    Alarm.alarmOnce(0,hours,mins,blockStart); //TODO: reset to hours and mins, instead of minutes and seconds
-    Alarm.alarmOnce(0,hours +((mins+block_length)/60),(mins+block_length) % 60,alarmSound); //TODO: reset to hours and mins, instead of minutes and seconds
+    Alarm.alarmOnce(0, hours, mins, blockStart); //TODO: reset to hours and mins, instead of minutes and seconds
+    Alarm.alarmOnce(0, hours + ((mins + block_length) / 60), (mins + block_length) % 60, alarmSound); //TODO: reset to hours and mins, instead of minutes and seconds
     Serial.print("Alarm set on: ");
     Serial.print(hours);
     Serial.print(":");
     Serial.print(mins);
     Serial.print("\n");
 
-    digitalWrite(ALARM_LED_PIN, HIGH);
-
+    digitalWrite(ALARM_LED_PIN, HIGH); //Laat zien dat het alarm ingesteld is
 }
 
 void onButtonRisingEdge(int pin, int *lastButtonState, void (*onRisingEdge)()) {
@@ -138,7 +137,7 @@ void onButtonRisingEdge(int pin, int *lastButtonState, void (*onRisingEdge)()) {
     if (buttonState != *lastButtonState) {
         Serial.println("button: ");
         Serial.println(buttonState);
-        if(buttonState == HIGH) {
+        if (buttonState == HIGH) {
             (*onRisingEdge)();
         }
     }
@@ -157,7 +156,7 @@ void loop() {
     // Check for state button
     onButtonRisingEdge(BTN_MENU_PIN, &last_button_menu, &toggleState);
     //Execute the current state
-    switch(state) {
+    switch (state) {
     case STATE_SHOWTIME:
         //show the time
         displayTime(minute(), second());
@@ -180,12 +179,12 @@ void loop() {
         onButtonRisingEdge(BTN_MIN_PIN, &last_button_minute, &incMinutes);
         break;
     default:
-        displayTime(99,99); //error!
+        displayTime(99, 99); //error!
         break;
     }
 
     // Measure accelerometer if needed
-    if(in_measure_block) {
+    if (in_measure_block) {
         //ACCELEROMETER stuff
         //Reading 6 bytes of data starting at register DATAX0 will retrieve the x,y and z acceleration values from the ADXL345.
         //The results of the read operation will get stored to the values[] buffer.
@@ -193,13 +192,13 @@ void loop() {
 
         //The ADXL345 gives 10-bit acceleration values, but they are stored as bytes (8-bits). To get the full value, two bytes must be combined for each axis.
         //The X value is stored in values[0] and values[1].
-        acc_x = ((int)values[1]<<8)|(int)values[0];
+        acc_x = ((int)values[1] << 8) | (int)values[0];
         //The Y value is stored in values[2] and values[3].
-        acc_y = ((int)values[3]<<8)|(int)values[2];
+        acc_y = ((int)values[3] << 8) | (int)values[2];
         //The Z value is stored in values[4] and values[5].
-        acc_z = ((int)values[5]<<8)|(int)values[4];
+        acc_z = ((int)values[5] << 8) | (int)values[4];
 
-        acc_change = abs(last_x-acc_x) + abs(last_y-acc_y) + abs(last_z-acc_z);
+        acc_change = abs(last_x - acc_x) + abs(last_y - acc_y) + abs(last_z - acc_z);
         last_x = acc_x;
         last_y = acc_y;
         last_z = acc_z;
@@ -212,7 +211,7 @@ void loop() {
         Serial.println(acc_z, DEC);
         Serial.println(acc_change);
 
-        if(acc_change > 150) {
+        if (acc_change > 150) {
             alarmSound();
         }
     }
@@ -230,131 +229,131 @@ void blockStart() {
  * Is called when the measure block is over, or when the accelerometer has registered movement
  */
 void alarmSound() {
-  if(in_measure_block) {
-    in_measure_block = false;
-    digitalWrite(ALARM_LED_PIN, LOW);
-    Serial.println("Alarm triggered!");
-    tone(SPEAKER_PIN, 440, 500);
-    Alarm.delay(100);
-    noTone(SPEAKER_PIN);
-    tone(SPEAKER_PIN, 523, 500);
-    Alarm.delay(100);
-    noTone(SPEAKER_PIN);
-    tone(SPEAKER_PIN, 659, 500);
-    Alarm.delay(100);
-    noTone(SPEAKER_PIN);
-  }
+    if (in_measure_block) {
+        in_measure_block = false;
+        digitalWrite(ALARM_LED_PIN, LOW);
+        Serial.println("Alarm triggered!");
+        tone(SPEAKER_PIN, 440, 500);
+        Alarm.delay(100);
+        noTone(SPEAKER_PIN);
+        tone(SPEAKER_PIN, 523, 500);
+        Alarm.delay(100);
+        noTone(SPEAKER_PIN);
+        tone(SPEAKER_PIN, 659, 500);
+        Alarm.delay(100);
+        noTone(SPEAKER_PIN);
+    }
 }
 
 void displayTime(int hours, int minutes) {
-    displayDigitOnSquare(hours / 10,1);
+    displayDigitOnSquare(hours / 10, 1);
     displayDigitOnSquare(hours % 10, 2);
-    displayDigitOnSquare(minutes / 10,3);
-    displayDigitOnSquare(minutes % 10,4);
+    displayDigitOnSquare(minutes / 10, 3);
+    displayDigitOnSquare(minutes % 10, 4);
 }
 
 void displayDigitOnSquare(int num, int square) {
     turnOnSquare(square);
     displayDigit(num);
-    Alarm.delay(2); //This makes sure that the value of the previous digit doesn't 'blend' into the next one
+    Alarm.delay(0); //This makes sure that the value of the previous digit doesn't 'blend' into the next one
 }
 
 void displayDigit(int num) {
-    switch(num) {
+    switch (num) {
     case 0:
-        digitalWrite(8,LOW); // turn off pin 8
-        digitalWrite(7,LOW); // turn off pin 7
-        digitalWrite(6,LOW); // turn off pin 6
-        digitalWrite(5,LOW); // turn off pin 5
+        digitalWrite(8, LOW); // turn off pin 8
+        digitalWrite(7, LOW); // turn off pin 7
+        digitalWrite(6, LOW); // turn off pin 6
+        digitalWrite(5, LOW); // turn off pin 5
         break;
     case 1:
-        digitalWrite(8,LOW); // turn off pin 8
-        digitalWrite(7,LOW); // turn off pin 7
-        digitalWrite(6,LOW); // turn off pin 6
-        digitalWrite(5,HIGH); // turn ON pin 5
+        digitalWrite(8, LOW); // turn off pin 8
+        digitalWrite(7, LOW); // turn off pin 7
+        digitalWrite(6, LOW); // turn off pin 6
+        digitalWrite(5, HIGH); // turn ON pin 5
         break;
     case 2:
-        digitalWrite(8,LOW); // turn off pin 8
-        digitalWrite(7,LOW); // turn off pin 7
-        digitalWrite(6,HIGH); // turn ON pin 6
-        digitalWrite(5,LOW); // turn off pin 5
+        digitalWrite(8, LOW); // turn off pin 8
+        digitalWrite(7, LOW); // turn off pin 7
+        digitalWrite(6, HIGH); // turn ON pin 6
+        digitalWrite(5, LOW); // turn off pin 5
         break;
     case 3:
-        digitalWrite(8,LOW); // turn off pin 8
-        digitalWrite(7,LOW); // turn off pin 7
-        digitalWrite(6,HIGH); // turn ON pin 6
-        digitalWrite(5,HIGH); // turn ON pin 5
+        digitalWrite(8, LOW); // turn off pin 8
+        digitalWrite(7, LOW); // turn off pin 7
+        digitalWrite(6, HIGH); // turn ON pin 6
+        digitalWrite(5, HIGH); // turn ON pin 5
         break;
     case 4:
-        digitalWrite(8,LOW); // turn off pin 8
-        digitalWrite(7,HIGH); // turn ON pin 7
-        digitalWrite(6,LOW); // turn off pin 6
-        digitalWrite(5,LOW); // turn off pin 5
+        digitalWrite(8, LOW); // turn off pin 8
+        digitalWrite(7, HIGH); // turn ON pin 7
+        digitalWrite(6, LOW); // turn off pin 6
+        digitalWrite(5, LOW); // turn off pin 5
         break;
     case 5:
-        digitalWrite(8,LOW); // turn off pin 8
-        digitalWrite(7,HIGH); // turn ON pin 7
-        digitalWrite(6,LOW); // turn off pin 6
-        digitalWrite(5,HIGH); // turn ON pin 5
+        digitalWrite(8, LOW); // turn off pin 8
+        digitalWrite(7, HIGH); // turn ON pin 7
+        digitalWrite(6, LOW); // turn off pin 6
+        digitalWrite(5, HIGH); // turn ON pin 5
         break;
     case 6:
-        digitalWrite(8,LOW); // turn off pin 8
-        digitalWrite(7,HIGH); // turn ON pin 7
-        digitalWrite(6,HIGH); // turn ON pin 6
-        digitalWrite(5,LOW); // turn off pin 5
+        digitalWrite(8, LOW); // turn off pin 8
+        digitalWrite(7, HIGH); // turn ON pin 7
+        digitalWrite(6, HIGH); // turn ON pin 6
+        digitalWrite(5, LOW); // turn off pin 5
         break;
     case 7:
-        digitalWrite(8,LOW); // turn off pin 8
-        digitalWrite(7,HIGH); // turn ON pin 7
-        digitalWrite(6,HIGH); // turn ON pin 6
-        digitalWrite(5,HIGH); // turn ON pin 5
+        digitalWrite(8, LOW); // turn off pin 8
+        digitalWrite(7, HIGH); // turn ON pin 7
+        digitalWrite(6, HIGH); // turn ON pin 6
+        digitalWrite(5, HIGH); // turn ON pin 5
         break;
     case 8:
-        digitalWrite(8,HIGH); // turn ON pin 8
-        digitalWrite(7,LOW); // turn off pin 7
-        digitalWrite(6,LOW); // turn off pin 6
-        digitalWrite(5,LOW); // turn off pin 5
+        digitalWrite(8, HIGH); // turn ON pin 8
+        digitalWrite(7, LOW); // turn off pin 7
+        digitalWrite(6, LOW); // turn off pin 6
+        digitalWrite(5, LOW); // turn off pin 5
         break;
     case 9:
-        digitalWrite(8,HIGH); // turn ON pin 8
-        digitalWrite(7,LOW); // turn off pin 7
-        digitalWrite(6,LOW); // turn off pin 6
-        digitalWrite(5,HIGH); // turn ON pin 5
+        digitalWrite(8, HIGH); // turn ON pin 8
+        digitalWrite(7, LOW); // turn off pin 7
+        digitalWrite(6, LOW); // turn off pin 6
+        digitalWrite(5, HIGH); // turn ON pin 5
         break;
     }
 }
 
 void turnOnSquare(int num) {
-    switch(num) {
+    switch (num) {
     case 0:
-        digitalWrite(DIGIT_2,LOW);
-        digitalWrite(DIGIT_3,LOW);
-        digitalWrite(DIGIT_4,LOW);
-        digitalWrite(DIGIT_1,LOW);
+        digitalWrite(DIGIT_2, LOW);
+        digitalWrite(DIGIT_3, LOW);
+        digitalWrite(DIGIT_4, LOW);
+        digitalWrite(DIGIT_1, LOW);
         break;
     case 1:
-        digitalWrite(DIGIT_2,LOW);
-        digitalWrite(DIGIT_3,LOW);
-        digitalWrite(DIGIT_4,LOW);
-        digitalWrite(DIGIT_1,HIGH);
+        digitalWrite(DIGIT_2, LOW);
+        digitalWrite(DIGIT_3, LOW);
+        digitalWrite(DIGIT_4, LOW);
+        digitalWrite(DIGIT_1, HIGH);
         break;
     case 2:
-        digitalWrite(DIGIT_1,LOW);
-        digitalWrite(DIGIT_3,LOW);
-        digitalWrite(DIGIT_4,LOW);
-        digitalWrite(DIGIT_2,HIGH);
+        digitalWrite(DIGIT_1, LOW);
+        digitalWrite(DIGIT_3, LOW);
+        digitalWrite(DIGIT_4, LOW);
+        digitalWrite(DIGIT_2, HIGH);
         break;
     case 3:
-        digitalWrite(DIGIT_1,LOW);
-        digitalWrite(DIGIT_2,LOW);
-        digitalWrite(DIGIT_4,LOW);
-        digitalWrite(DIGIT_3,HIGH);
+        digitalWrite(DIGIT_1, LOW);
+        digitalWrite(DIGIT_2, LOW);
+        digitalWrite(DIGIT_4, LOW);
+        digitalWrite(DIGIT_3, HIGH);
         break;
     case 4:
-        digitalWrite(DIGIT_1,LOW);
-        digitalWrite(DIGIT_2,LOW);
-        digitalWrite(DIGIT_3,LOW);
-        digitalWrite(DIGIT_4,HIGH);
+        digitalWrite(DIGIT_1, LOW);
+        digitalWrite(DIGIT_2, LOW);
+        digitalWrite(DIGIT_3, LOW);
+        digitalWrite(DIGIT_4, HIGH);
         break;
     default:
         // this should never occur, but do what you want here
@@ -382,18 +381,18 @@ void writeRegister(char registerAddress, char value) {
 //  char registerAddress - The register addresse to start the read sequence from.
 //  int numBytes - The number of registers that should be read.
 //  char * values - A pointer to a buffer where the results of the operation should be stored.
-void readRegister(char registerAddress, int numBytes, char * values) {
+void readRegister(char registerAddress, int numBytes, char *values) {
     //Since we're performing a read operation, the most significant bit of the register address should be set.
     char address = 0x80 | registerAddress;
     //If we're doing a multi-byte read, bit 6 needs to be set as well.
-    if(numBytes > 1)address = address | 0x40;
+    if (numBytes > 1)address = address | 0x40;
 
     //Set the Chip select pin low to start an SPI packet.
     digitalWrite(CHIP_SELECT_PIN, LOW);
     //Transfer the starting register address that needs to be read.
     SPI.transfer(address);
     //Continue to read registers until we've read the number specified, storing the results to the input buffer.
-    for(int i=0; i<numBytes; i++) {
+    for (int i = 0; i < numBytes; i++) {
         values[i] = SPI.transfer(0x00);
     }
     //Set the Chips Select pin high to end the SPI packet.
