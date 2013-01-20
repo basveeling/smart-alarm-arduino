@@ -35,7 +35,7 @@ int inc_hours_amount = 0;
 int inc_mins_amount = 0;
 int blink_delay = 0;
 
-//Program State
+//User interface State
 int state = 0;
 
 //Accelerometer registers, values and and pins
@@ -86,65 +86,6 @@ void setup() {
     writeRegister(POWER_CTL, 0x08);  //Measurement mode
 }
 
-void toggleState() {
-    state = (state + 1) % 3;
-    if (state == 0) { // state switched to 0, set the alarm
-        setAlarm();
-    } else if (state == 1) {
-        blink_delay = millis();
-    } else if (state == 2) {
-        setTime(0, minute() + inc_hours_amount, second() + inc_mins_amount, day(), month(), year());
-        inc_hours_amount = 0;
-        inc_mins_amount = 0;
-    }
-    Serial.println("state switched!");
-}
-
-void incHours() {
-    hours = (hours + 1) % 24;
-    Serial.println("hours incremented");
-}
-
-void incMinutes() {
-    mins = (mins + 1) % 60;
-    Serial.println("minutes incremented");
-}
-
-void incTimeHours() {
-    inc_hours_amount = (inc_hours_amount + 1) % 24;
-    Serial.println("hours incremented");
-}
-
-void incTimeMinutes() {
-    inc_mins_amount = (inc_mins_amount + 1) % 60;
-    Serial.println("minutes incremented");
-}
-
-void setAlarm() {
-    Alarm.alarmOnce(0, hours, mins, blockStart); //TODO: reset to hours and mins, instead of minutes and seconds
-    Alarm.alarmOnce(0, hours + ((mins + block_length) / 60), (mins + block_length) % 60, alarmSound); //TODO: reset to hours and mins, instead of minutes and seconds
-    Serial.print("Alarm set on: ");
-    Serial.print(hours);
-    Serial.print(":");
-    Serial.print(mins);
-    Serial.print("\n");
-
-    digitalWrite(ALARM_LED_PIN, HIGH); //Laat zien dat het alarm ingesteld is
-}
-
-void onButtonRisingEdge(int pin, int *lastButtonState, void (*onRisingEdge)()) {
-    int buttonState = digitalRead(pin);
-    if (buttonState != *lastButtonState) {
-        Serial.println("button: ");
-        Serial.println(buttonState);
-        if (buttonState == HIGH) {
-            (*onRisingEdge)();
-        }
-    }
-
-    *lastButtonState = buttonState;
-}
-
 /*
  * LOOP method
  */
@@ -183,7 +124,7 @@ void loop() {
         break;
     }
 
-    // Measure accelerometer if needed
+    // Measure accelerometer data if needed
     if (in_measure_block) {
         //ACCELEROMETER stuff
         //Reading 6 bytes of data starting at register DATAX0 will retrieve the x,y and z acceleration values from the ADXL345.
@@ -218,6 +159,75 @@ void loop() {
 }
 
 /*
+ * Walk through the user interface states
+ */
+void toggleState() {
+    state = (state + 1) % 3;
+    if (state == 0) { // state switched to 0, set the alarm
+        setAlarm();
+    } else if (state == 1) {
+        blink_delay = millis();
+    } else if (state == 2) {
+        setTime(0, minute() + inc_hours_amount, second() + inc_mins_amount, day(), month(), year());
+        inc_hours_amount = 0;
+        inc_mins_amount = 0;
+    }
+    Serial.println("state switched!");
+}
+
+void incHours() {
+    hours = (hours + 1) % 24;
+    Serial.println("hours incremented");
+}
+
+void incMinutes() {
+    mins = (mins + 1) % 60;
+    Serial.println("minutes incremented");
+}
+
+void incTimeHours() {
+    inc_hours_amount = (inc_hours_amount + 1) % 24;
+    Serial.println("hours incremented");
+}
+
+void incTimeMinutes() {
+    inc_mins_amount = (inc_mins_amount + 1) % 60;
+    Serial.println("minutes incremented");
+}
+/*
+ * Set the alarm to the current hours and minutes set by the user
+ */
+void setAlarm() {
+    Alarm.alarmOnce(0, hours, mins, blockStart); //TODO: reset to hours and mins, instead of minutes and seconds
+    Alarm.alarmOnce(0, hours + ((mins + block_length) / 60), (mins + block_length) % 60, alarmSound); //TODO: reset to hours and mins, instead of minutes and seconds
+    Serial.print("Alarm set on: ");
+    Serial.print(hours);
+    Serial.print(":");
+    Serial.print(mins);
+    Serial.print("\n");
+
+    digitalWrite(ALARM_LED_PIN, HIGH); //Laat zien dat het alarm ingesteld is
+}
+
+/*
+ * This functions calls the onRisingEdge function 
+ * whenever the input pin changes from low to high.
+ * Requires a lastButtonState var inorder to keep in memory the last state of the button
+ */
+void onButtonRisingEdge(int pin, int *lastButtonState, void (*onRisingEdge)()) {
+    int buttonState = digitalRead(pin);
+    if (buttonState != *lastButtonState) {
+        Serial.println("button: ");
+        Serial.println(buttonState);
+        if (buttonState == HIGH) {
+            (*onRisingEdge)();
+        }
+    }
+
+    *lastButtonState = buttonState;
+}
+
+/*
  * Is called when the measure block for the alarm has started
  */
 void blockStart() {
@@ -227,6 +237,7 @@ void blockStart() {
 
 /*
  * Is called when the measure block is over, or when the accelerometer has registered movement
+ * Generates a simple alarm melody.
  */
 void alarmSound() {
     if (in_measure_block) {
@@ -245,6 +256,11 @@ void alarmSound() {
     }
 }
 
+/*
+ * A wrapper function for the three functions below, 
+ * accepts two integers in hours and minutes, 
+ * and calculates the resulting digits for the display
+ */
 void displayTime(int hours, int minutes) {
     displayDigitOnSquare(hours / 10, 1);
     displayDigitOnSquare(hours % 10, 2);
@@ -252,12 +268,18 @@ void displayTime(int hours, int minutes) {
     displayDigitOnSquare(minutes % 10, 4);
 }
 
+/*
+ * A wrapper function for the two functions below
+ */
 void displayDigitOnSquare(int num, int square) {
     turnOnSquare(square);
     displayDigit(num);
     Alarm.delay(0); //This makes sure that the value of the previous digit doesn't 'blend' into the next one
 }
 
+/*
+ * This function sends a binary coded decimal to the BCD
+ */
 void displayDigit(int num) {
     switch (num) {
     case 0:
@@ -322,7 +344,10 @@ void displayDigit(int num) {
         break;
     }
 }
-
+/*
+ * This function sets the digit select pin on the 7-segment display. 
+ * An int 0 deselects all the pins, which is useful for blinking the display
+ */
 void turnOnSquare(int num) {
     switch (num) {
     case 0:
